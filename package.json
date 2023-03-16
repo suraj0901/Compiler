@@ -3,11 +3,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "compile": "node main.js"
+    "compile": "nodemon main.js"
   },
   "dependencies": {
     "acorn": "^8.8.2",
     "escodegen": "^2.0.0",
     "estree-walker": "^3.0.3"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.21"
   }
 }
