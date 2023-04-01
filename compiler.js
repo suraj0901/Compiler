@@ -1,6 +1,8 @@
 import * as acorn from 'acorn';
 import * as fs from 'node:fs';
 
+const log = (value) => JSON.stringify(value, null, 2);
+
 function parse(content) {
   let i = 0;
   const ast = {};
@@ -11,6 +13,7 @@ function parse(content) {
     const fragments = [];
     while (condition()) {
       const fragment = parseFragment();
+      log(fragment);
       if (fragment) fragments.push(fragment);
     }
     return fragments;
@@ -24,7 +27,10 @@ function parse(content) {
     const startIndex = i;
     const endIndex = content.indexOf('</script>', i);
     const code = content.slice(startIndex, endIndex);
-    ast.script = acorn.parse(code, { ecmaVersion: 'latest' });
+    ast.script = acorn.parse(code, {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    });
     i = endIndex;
     eat('</script>');
   }
@@ -41,6 +47,7 @@ function parse(content) {
       attributes,
       children: parseFragments(() => match(endTag)),
     };
+    // log(element);
     return element;
   }
   function parseAttributeList() {
@@ -84,7 +91,11 @@ function parse(content) {
   }
 
   function parseJavaScript() {
-    const js = acorn.parseExpressionAt(content, i, { ecmaVersion: 2022 });
+    const js = acorn.parseExpressionAt(content, i, {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+    });
+
     i = js.end;
     return js;
   }
@@ -99,6 +110,7 @@ function parse(content) {
   function readWhileMatching(regex) {
     let startIndex = i;
     while (regex.test(content[i])) {
+      console.log('readWhileMatching');
       i++;
     }
     return content.slice(startIndex, i);
@@ -110,12 +122,12 @@ function parse(content) {
 
 const main = ({ inputFileName, outputFileName }) => {
   const content = fs.readFileSync(inputFileName, 'utf-8');
+  // log(content);
   const ast = parse(content);
-  const analysis = analyse(ast);
-  const js = generate(ast, analysis);
-  fs.writeFileSync(outputFileName, JSON.stringify(js, null, 3), 'utf-8');
+  log(ast);
+  // const analysis = analyse(ast);
+  // const js = generate(ast, analysis);
+  // fs.writeFileSync(outputFileName, JSON.stringify(ast, null, 3), 'utf-8');
 };
-
-main({ inputFileName: './index.svelte', outputFileName: './output.json' });
 
 export default main;
