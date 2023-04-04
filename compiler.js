@@ -131,7 +131,7 @@ function generate(ast) {
     if (!node) return;
     if (Array.isArray(node)) {
       return node
-        .map((html) => traverse(html, `${currentRef}.nextSibling`))
+        .map((html, index) => traverse(html, `${currentRef}.childNodes[${index}]`))
         .join(" ")
     }
     switch (node.type) {
@@ -189,12 +189,12 @@ function generate(ast) {
   const template = traverse(ast.html, '_el$')
 
   if (template) {
-    const script = codegen.generate(ast.script)
+    const script = codegen.generate(ast.script) 
     const client = `export const client = () => {
       ${script}
       return (_el$) =>{\n\t${code.client.join('\n\t')}\n}
     }`
-    const server = `export const server = () => {
+    const server  = `export const server = () => {
       ${script}
       return \`${template}\`
     }`
@@ -207,7 +207,7 @@ const main = ({ inputFileName, outputFileName }) => {
   const ast = parse(content);
   // const analysis = analyse(ast);
   const js = generate(ast);
-  log(js)
+  // log(js)
   // const js = JSON.stringify(ast, null, 3)
   fs.writeFileSync(outputFileName, js, 'utf-8');
 };
