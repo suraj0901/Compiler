@@ -1,7 +1,8 @@
 import * as acorn from 'acorn';
 import * as fs from 'node:fs';
-
-const log = (value) => JSON.stringify(value, null, 2);
+import * as codegen from 'escodegen'
+const log = (value) => console.log(JSON.stringify(value, null, 2));
+const event = new Set();
 
 function parse(content) {
   let i = 0;
@@ -13,7 +14,7 @@ function parse(content) {
     const fragments = [];
     while (condition()) {
       const fragment = parseFragment();
-      log(fragment);
+      // log(fragment);
       if (fragment) fragments.push(fragment);
     }
     return fragments;
@@ -37,7 +38,7 @@ function parse(content) {
   function parseElement() {
     if (!match('<')) return null;
     eat('<');
-    const tagName = readWhileMatching(/[a-z]/);
+    const tagName = readWhileMatching(/[a-z0-6]/);
     const attributes = parseAttributeList();
     eat('>');
     const endTag = `</${tagName}>`;
@@ -45,9 +46,9 @@ function parse(content) {
       type: 'Element',
       name: tagName,
       attributes,
-      children: parseFragments(() => match(endTag)),
+      children: parseFragments(() => !match(endTag)),
     };
-    // log(element);
+    eat(endTag)
     return element;
   }
   function parseAttributeList() {
@@ -65,10 +66,12 @@ function parse(content) {
       type: 'Attribute',
       name: readWhileMatching(/[^=]/),
     };
+    // log({attribute})
     eat('=');
     if (match('{')) {
       attribute.value = parseExpression();
     } else attribute.value = parseText();
+    // log({next:attribute})
     return attribute;
   }
   function parseExpression() {
@@ -109,8 +112,7 @@ function parse(content) {
   }
   function readWhileMatching(regex) {
     let startIndex = i;
-    while (regex.test(content[i])) {
-      console.log('readWhileMatching');
+    while (regex.test(content[i]) && i < content.length) {
       i++;
     }
     return content.slice(startIndex, i);
@@ -120,14 +122,94 @@ function parse(content) {
   }
 }
 
+function generate(ast) {
+  const code = {
+    client: [],
+  };
+
+  function traverse(node, currentRef) {
+    if (!node) return;
+    if (Array.isArray(node)) {
+      return node
+        .map((html) => traverse(html, `${currentRef}.nextSibling`))
+        .join(" ")
+    }
+    switch (node.type) {
+      case 'Fragment': {
+        const children = node.children.map((children, index) => {
+          return traverse(children, `${currentRef}.childNodes[${index}]`);
+        });
+        return children.join(' ');
+      }
+      case 'Element': {
+        let tag = `<${node.name} `;
+        const attr = node.attributes.map((attribute) =>
+          traverse(attribute, currentRef)
+        );
+        tag += attr.join(' ');
+        if (node.selfClosing) return tag + '/>';
+        tag += '>';
+        const children = node.children.map((children, index) => {
+          return traverse(children, `${currentRef}.childNodes[${index}]`);
+        });
+        tag += children.join('') + `</${node.name}>`;
+        return tag;
+      }
+      case 'Attribute': {
+        let attribute = '';
+        if (node.name.startsWith('on:')) {
+          code.client.push(
+            `${currentRef}.$$${node.name.slice(3)}=${node.value.expression.name};`
+          );
+          event.add(`"${node.name.slice(3)}"`);
+        } else if (node.value.type === 'Expression') {
+          code.client.push(
+            `window._runtime$.bindAttr(${currentRef},"${node.name}", () => ${node.expression.name})`
+          );
+          attribute = `${node.name}="\${${node.value.value}}"`;
+        } else {
+          attribute = `${node.name}="${node.value.value}"`;
+        }
+        return attribute;
+      }
+      case 'Expression': {
+        code.client.push(
+          `window._runtime$.bindText(${currentRef}, () => ${node.expression.name}); `
+        );
+        return `<span>\${${node.expression.name}}</span>`;
+      }
+      case 'Text': {
+        return node.value;
+      }
+      default: {
+        throw new Error(`unexpected type of element ${JSON.stringify(node)}`);
+      }
+    }
+  }
+  const template = traverse(ast.html, '_el$')
+
+  if (template) {
+    const script = codegen.generate(ast.script)
+    const client = `export const client = () => {
+      ${script}
+      return (_el$) =>{\n\t${code.client.join('\n\t')}\n}
+    }`
+    const server = `export const server = () => {
+      ${script}
+      return \`${template}\`
+    }`
+    return [client, server].join('\n')
+  }
+}
+
 const main = ({ inputFileName, outputFileName }) => {
   const content = fs.readFileSync(inputFileName, 'utf-8');
-  // log(content);
   const ast = parse(content);
-  log(ast);
   // const analysis = analyse(ast);
-  // const js = generate(ast, analysis);
-  // fs.writeFileSync(outputFileName, JSON.stringify(ast, null, 3), 'utf-8');
+  const js = generate(ast);
+  log(js)
+  // const js = JSON.stringify(ast, null, 3)
+  fs.writeFileSync(outputFileName, js, 'utf-8');
 };
 
 export default main;
