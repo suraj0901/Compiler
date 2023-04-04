@@ -163,8 +163,9 @@ function generate(ast) {
           );
           event.add(`"${node.name.slice(3)}"`);
         } else if (node.value.type === 'Expression') {
+          const ex = codegen.generate(node.expression)
           code.client.push(
-            `window._runtime$.bindAttr(${currentRef},"${node.name}", () => ${node.expression.name})`
+            `window._runtime$.bindAttr(${currentRef},"${node.name}", () => ${ex})`
           );
           attribute = `${node.name}="\${${node.value.value}}"`;
         } else {
@@ -173,10 +174,11 @@ function generate(ast) {
         return attribute;
       }
       case 'Expression': {
+        const exp = codegen.generate(node.expression)
         code.client.push(
-          `window._runtime$.bindText(${currentRef}, () => ${node.expression.name}); `
+          `window._runtime$.bindText(${currentRef}, () => ${exp}); `
         );
-        return `<span>\${${node.expression.name}}</span>`;
+        return `<span>\${${exp}}</span>`;
       }
       case 'Text': {
         return node.value;
@@ -207,9 +209,10 @@ const main = ({ inputFileName, outputFileName }) => {
   const ast = parse(content);
   // const analysis = analyse(ast);
   const js = generate(ast);
-  // log(js)
-  // const js = JSON.stringify(ast, null, 3)
+  log(ast)
+  // const  = JSON.stringify(ast, null, 3)
   fs.writeFileSync(outputFileName, js, 'utf-8');
+  // fs.writeFileSync(outputFileName, js, 'utf-8');
 };
 
 export default main;
