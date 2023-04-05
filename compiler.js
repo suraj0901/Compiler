@@ -131,13 +131,13 @@ function generate(ast) {
     if (!node) return;
     if (Array.isArray(node)) {
       return node
-        .map((html, index) => traverse(html, `${currentRef}.childNodes[${index}]`))
+        .map((html, index) => traverse(html, `${currentRef}.children[${index}]`))
         .join(" ")
     }
     switch (node.type) {
       case 'Fragment': {
         const children = node.children.map((children, index) => {
-          return traverse(children, `${currentRef}.childNodes[${index}]`);
+          return traverse(children, `${currentRef}.children[${index}]`);
         });
         return children.join(' ');
       }
@@ -150,7 +150,7 @@ function generate(ast) {
         if (node.selfClosing) return tag + '/>';
         tag += '>';
         const children = node.children.map((children, index) => {
-          return traverse(children, `${currentRef}.childNodes[${index}]`);
+          return traverse(children, `${currentRef}.children[${index}]`);
         });
         tag += children.join('') + `</${node.name}>`;
         return tag;

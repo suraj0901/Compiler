@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "compile": "nodemon main.js"
+    "compile": "nodemon main.js",
+    "serve": "nodemon server.js"
   },
   "dependencies": {
     "acorn": "^8.8.2",
@@ -11,6 +12,6 @@
     "estree-walker": "^3.0.3"
   },
   "devDependencies": {
-    "nodemon": "^2.0.21"
+    "nodemon": "^2.0.22"
   }
 }
