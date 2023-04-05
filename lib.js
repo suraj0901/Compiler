@@ -1,9 +1,17 @@
-class Global {
+export class Global {
     static context = new Array()
     static bindText(elem, callback) {
-        this.context.push(() => elem.textContent = callback())
+        const unsubscribe = new Set()
+        const subscribe = (unsubscribeFn) => {
+            unsubscribe.add(unsubscribeFn)
+            return () => {
+                elem.textContent = callback()
+            }
+        }
+        this.context.push(subscribe)
         callback()
         this.context.pop()
+        return unsubscribe
     }
     static $ = (val) => observable(val)
     static $$ = (val) => observable({ val })
@@ -20,9 +28,12 @@ const observable = (target, _base=[]) => {
             const callback = Global.context.at(-1)
             if (callback) {
                 const k = [..._base, key]
-                if (!subscribers.has(k)) subscribers.set(k, new Set())
-                const callbacks = subscribers.get(k) 
-                callbacks.add(callback(callbacks.delete))
+                // console.log({k})
+                for(const key of k) {
+                    if (!subscribers.has(key)) subscribers.set(key, new Set())
+                    const callbacks = subscribers.get(key) 
+                    callbacks.add(callback(callbacks.delete))
+                }
             }
             return target[key];
         },
@@ -31,11 +42,13 @@ const observable = (target, _base=[]) => {
                     value = observable(value, [..._base, key]);
                 target[key] = value
                 const k = [..._base, key]
-                if (subscribers.has(k))
-                    subscribers.get(k).forEach(callback => callback())
-                return value;
+                for(const key of k) {
+                    // console.log({key}, [...subscribers.keys()])                    
+                    if (subscribers.has(key)) {
+                        subscribers.get(key).forEach(callback => callback())
+                    }
+                }
+                return true;
         },
     });
 };
-
-

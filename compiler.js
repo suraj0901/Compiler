@@ -1,6 +1,7 @@
 import * as acorn from 'acorn';
 import * as fs from 'node:fs';
 import * as codegen from 'escodegen'
+import { walk } from 'estree-walker';
 const log = (value) => console.log(JSON.stringify(value, null, 2));
 const event = new Set();
 
@@ -126,21 +127,17 @@ function generate(ast) {
   const code = {
     client: [],
   };
-
+  const changeVariableName = new Set()
+  const clientSideCode = clientScript(ast.script)
+  
   function traverse(node, currentRef) {
     if (!node) return;
     if (Array.isArray(node)) {
       return node
         .map((html, index) => traverse(html, `${currentRef}.children[${index}]`))
-        .join(" ")
+        .join("")
     }
     switch (node.type) {
-      case 'Fragment': {
-        const children = node.children.map((children, index) => {
-          return traverse(children, `${currentRef}.children[${index}]`);
-        });
-        return children.join(' ');
-      }
       case 'Element': {
         let tag = `<${node.name} `;
         const attr = node.attributes.map((attribute) =>
@@ -150,7 +147,7 @@ function generate(ast) {
         if (node.selfClosing) return tag + '/>';
         tag += '>';
         const children = node.children.map((children, index) => {
-          return traverse(children, `${currentRef}.children[${index}]`);
+          return traverse(children, `${currentRef}.childNodes[${index}]`);
         });
         tag += children.join('') + `</${node.name}>`;
         return tag;
@@ -163,7 +160,7 @@ function generate(ast) {
           );
           event.add(`"${node.name.slice(3)}"`);
         } else if (node.value.type === 'Expression') {
-          const ex = codegen.generate(node.expression)
+          const ex = clientScript(node.expression)
           code.client.push(
             `window._runtime$.bindAttr(${currentRef},"${node.name}", () => ${ex})`
           );
@@ -174,11 +171,17 @@ function generate(ast) {
         return attribute;
       }
       case 'Expression': {
-        const exp = codegen.generate(node.expression)
+        // console.log(...changeVariableName.values())
+        // console.log(node.expression)
+        const exp = clientScript({
+          type: "ExpressionStatement",
+          expression: node.expression
+        }).slice(0,-1)
+        // console.log({exp})
         code.client.push(
           `window._runtime$.bindText(${currentRef}, () => ${exp}); `
         );
-        return `<span>\${${exp}}</span>`;
+        return `<span>\${${codegen.generate(node.expression)}}</span>`;
       }
       case 'Text': {
         return node.value;
@@ -188,16 +191,70 @@ function generate(ast) {
       }
     }
   }
+  function clientScript(script) {
+    const s = JSON.parse(JSON.stringify(script))
+    walk(s, {
+      leave(node, parent, prop, index) {
+        if (parent?.type === "VariableDeclarator") {
+          if (node?.type === "Literal") {
+            changeVariableName.add(parent.id?.name)
+            this.replace({
+              type: "CallExpression",
+              callee: {
+                type: "Identifier",
+                name: "window._runtime$.$$"
+              },
+              arguments: [
+                {
+                  type: "Literal",
+                  value: node.value,
+                  raw: node.raw
+                }
+              ]
+            })
+          }
+          else if (node?.type === "ArrayExpression" || node?.type === "ObjectExpression") {
+            this.replace({
+              type: "CallExpression",
+              callee: {
+                type: "Identifier",
+                name: "window._runtime$.$"
+              },
+              arguments: [
+                {
+                  type: "Literal",
+                  value: node.value,
+                  raw: node.raw
+                }
+              ]
+            })
+          }
+        }
+        else if (node?.type === "Identifier" && changeVariableName.has(node.name)) {
+          if (parent?.type === "Property" && prop === "key") return
+          if(parent?.type === "Property" && prop === "value") parent.shorthand = false
+          this.replace({
+            type: "MemberExpression",
+            object: node,
+            property: {
+              type: "Identifier",
+              name: "val"
+            }
+          })
+        }
+      }
+    })
+    return codegen.generate(s)
+  }
   const template = traverse(ast.html, '_el$')
 
   if (template) {
-    const script = codegen.generate(ast.script) 
     const client = `export const client = () => {
-      ${script}
+      ${clientSideCode}
       return (_el$) =>{\n\t${code.client.join('\n\t')}\n}
     }`
-    const server  = `export const server = () => {
-      ${script}
+    const server = `export const server = () => {
+      ${codegen.generate(ast.script)}
       return \`${template}\`
     }`
     return [client, server].join('\n')
@@ -209,7 +266,7 @@ const main = ({ inputFileName, outputFileName }) => {
   const ast = parse(content);
   // const analysis = analyse(ast);
   const js = generate(ast);
-  // log(ast)
+  // log(js)
   // const  = JSON.stringify(ast, null, 3)
   fs.writeFileSync(outputFileName, js, 'utf-8');
   // fs.writeFileSync(outputFileName, js, 'utf-8');

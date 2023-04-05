@@ -8,8 +8,13 @@ const indexHTML = (content) => `<!DOCTYPE html>
     <title>Svolid</title>
     <script type="module">
         import client from "./runtime.js"
+        import {Global} from "./lib.js"
+        window._runtime$ = Global
         const body = document.getElementsByTagName('body')[0]
         client()(body)
+        window.addEventListener("click", ({target}) => {
+            target["$$click"]?.()
+        })
     </script>
 </head>
 <body>
