@@ -209,7 +209,7 @@ const main = ({ inputFileName, outputFileName }) => {
   const ast = parse(content);
   // const analysis = analyse(ast);
   const js = generate(ast);
-  log(ast)
+  // log(ast)
   // const  = JSON.stringify(ast, null, 3)
   fs.writeFileSync(outputFileName, js, 'utf-8');
   // fs.writeFileSync(outputFileName, js, 'utf-8');

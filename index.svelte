@@ -1,6 +1,9 @@
 <script>
   let count = 0;
-  const increment = () => ++count;
+  const increment = () => {
+    ++count
+    console.log({count})
+  };
   const decrement = () => --count;
 </script>
 
