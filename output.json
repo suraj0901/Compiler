@@ -2,60 +2,53 @@
    "script": {
       "type": "Program",
       "start": 0,
-      "end": 101,
+      "end": 92,
       "body": [
          {
-            "type": "ExportNamedDeclaration",
-            "start": 4,
-            "end": 25,
-            "declaration": {
-               "type": "VariableDeclaration",
-               "start": 11,
-               "end": 25,
-               "declarations": [
-                  {
-                     "type": "VariableDeclarator",
-                     "start": 15,
-                     "end": 24,
-                     "id": {
-                        "type": "Identifier",
-                        "start": 15,
-                        "end": 20,
-                        "name": "count"
-                     },
-                     "init": {
-                        "type": "Literal",
-                        "start": 23,
-                        "end": 24,
-                        "value": 0,
-                        "raw": "0"
-                     }
-                  }
-               ],
-               "kind": "let"
-            },
-            "specifiers": [],
-            "source": null
-         },
-         {
             "type": "VariableDeclaration",
-            "start": 29,
-            "end": 61,
+            "start": 4,
+            "end": 18,
             "declarations": [
                {
                   "type": "VariableDeclarator",
-                  "start": 35,
-                  "end": 60,
+                  "start": 8,
+                  "end": 17,
                   "id": {
                      "type": "Identifier",
-                     "start": 35,
-                     "end": 44,
+                     "start": 8,
+                     "end": 13,
+                     "name": "count"
+                  },
+                  "init": {
+                     "type": "Literal",
+                     "start": 16,
+                     "end": 17,
+                     "value": 0,
+                     "raw": "0"
+                  }
+               }
+            ],
+            "kind": "let"
+         },
+         {
+            "type": "VariableDeclaration",
+            "start": 22,
+            "end": 54,
+            "declarations": [
+               {
+                  "type": "VariableDeclarator",
+                  "start": 28,
+                  "end": 53,
+                  "id": {
+                     "type": "Identifier",
+                     "start": 28,
+                     "end": 37,
                      "name": "increment"
                   },
                   "init": {
                      "type": "ArrowFunctionExpression",
-                     "start": 47,
-                     "end": 60,
+                     "start": 40,
+                     "end": 53,
                      "id": null,
                      "expression": true,
                      "generator": false,
@@ -63,14 +56,14 @@
                      "params": [],
                      "body": {
                         "type": "UpdateExpression",
-                        "start": 53,
-                        "end": 60,
+                        "start": 46,
+                        "end": 53,
                         "operator": "++",
                         "prefix": true,
                         "argument": {
                            "type": "Identifier",
-                           "start": 55,
-                           "end": 60,
+                           "start": 48,
+                           "end": 53,
                            "name": "count"
                         }
                      }
@@ -81,23 +74,23 @@
          },
          {
             "type": "VariableDeclaration",
-            "start": 65,
-            "end": 97,
+            "start": 58,
+            "end": 90,
             "declarations": [
                {
                   "type": "VariableDeclarator",
-                  "start": 71,
-                  "end": 96,
+                  "start": 64,
+                  "end": 89,
                   "id": {
                      "type": "Identifier",
-                     "start": 71,
-                     "end": 80,
+                     "start": 64,
+                     "end": 73,
                      "name": "decrement"
                   },
                   "init": {
                      "type": "ArrowFunctionExpression",
-                     "start": 83,
-                     "end": 96,
+                     "start": 76,
+                     "end": 89,
                      "id": null,
                      "expression": true,
                      "generator": false,
@@ -105,14 +98,14 @@
                      "params": [],
                      "body": {
                         "type": "UpdateExpression",
-                        "start": 89,
-                        "end": 96,
+                        "start": 82,
+                        "end": 89,
                         "operator": "--",
                         "prefix": true,
                         "argument": {
                            "type": "Identifier",
-                           "start": 91,
-                           "end": 96,
+                           "start": 84,
+                           "end": 89,
                            "name": "count"
                         }
                      }
@@ -126,72 +119,174 @@
    },
    "html": [
       {
-         "type": "Element",
-         "name": "button",
-         "attributes": [
-            {
-               "type": "Attribute",
-               "name": "on:click",
-               "value": {
-                  "type": "Expression",
-                  "expression": {
+         "type": "EachBlock",
+         "expression": {
+            "type": "CallExpression",
+            "start": 120,
+            "end": 140,
+            "callee": {
+               "type": "MemberExpression",
+               "start": 120,
+               "end": 137,
+               "object": {
+                  "type": "CallExpression",
+                  "start": 120,
+                  "end": 132,
+                  "callee": {
                      "type": "Identifier",
-                     "start": 140,
-                     "end": 149,
-                     "name": "decrement"
-                  }
+                     "start": 120,
+                     "end": 125,
+                     "name": "Array"
+                  },
+                  "arguments": [
+                     {
+                        "type": "Literal",
+                        "start": 126,
+                        "end": 131,
+                        "value": 10000,
+                        "raw": "10000"
+                     }
+                  ],
+                  "optional": false
+               },
+               "property": {
+                  "type": "Identifier",
+                  "start": 133,
+                  "end": 137,
+                  "name": "fill"
+               },
+               "computed": false,
+               "optional": false
+            },
+            "arguments": [
+               {
+                  "type": "Literal",
+                  "start": 138,
+                  "end": 139,
+                  "value": 0,
+                  "raw": "0"
                }
-            }
-         ],
+            ],
+            "optional": false
+         },
+         "context": {
+            "type": "Identifier",
+            "start": 144,
+            "end": 145,
+            "name": "a"
+         },
          "children": [
             {
-               "type": "Text",
-               "value": "Decrement"
-            }
-         ]
-      },
-      {
-         "type": "Element",
-         "name": "h3",
-         "attributes": [],
-         "children": [
-            {
-               "type": "Text",
-               "value": "Count is "
+               "type": "Element",
+               "name": "button",
+               "attributes": [
+                  {
+                     "type": "Attribute",
+                     "name": "on:click",
+                     "value": {
+                        "type": "Expression",
+                        "expression": {
+                           "type": "Identifier",
+                           "start": 168,
+                           "end": 177,
+                           "name": "decrement"
+                        }
+                     }
+                  }
+               ],
+               "children": [
+                  {
+                     "type": "Text",
+                     "value": "Decrement"
+                  }
+               ]
             },
             {
-               "type": "Expression",
-               "expression": {
-                  "type": "Identifier",
-                  "start": 185,
-                  "end": 190,
-                  "name": "count"
-               }
-            }
-         ]
-      },
-      {
-         "type": "Element",
-         "name": "button",
-         "attributes": [
-            {
-               "type": "Attribute",
-               "name": "on:click",
-               "value": {
-                  "type": "Expression",
-                  "expression": {
-                     "type": "Identifier",
-                     "start": 216,
-                     "end": 225,
-                     "name": "increment"
+               "type": "Element",
+               "name": "h3",
+               "attributes": [],
+               "children": [
+                  {
+                     "type": "Text",
+                     "value": "Count is "
+                  },
+                  {
+                     "type": "Expression",
+                     "expression": {
+                        "type": "Identifier",
+                        "start": 215,
+                        "end": 220,
+                        "name": "count"
+                     }
                   }
-               }
-            }
-         ],
-         "children": [
+               ]
+            },
             {
-               "type": "Text",
-               "value": "Increment"
+               "type": "Element",
+               "name": "p",
+               "attributes": [],
+               "children": [
+                  {
+                     "type": "Expression",
+                     "expression": {
+                        "type": "Identifier",
+                        "start": 234,
+                        "end": 239,
+                        "name": "count"
+                     }
+                  },
+                  {
+                     "type": "Text",
+                     "value": " * 2 = "
+                  },
+                  {
+                     "type": "Expression",
+                     "expression": {
+                        "type": "BinaryExpression",
+                        "start": 248,
+                        "end": 257,
+                        "left": {
+                           "type": "Identifier",
+                           "start": 248,
+                           "end": 253,
+                           "name": "count"
+                        },
+                        "operator": "*",
+                        "right": {
+                           "type": "Literal",
+                           "start": 256,
+                           "end": 257,
+                           "value": 2,
+                           "raw": "2"
+                        }
+                     }
+                  }
+               ]
+            },
+            {
+               "type": "Element",
+               "name": "button",
+               "attributes": [
+                  {
+                     "type": "Attribute",
+                     "name": "on:click",
+                     "value": {
+                        "type": "Expression",
+                        "expression": {
+                           "type": "Identifier",
+                           "start": 284,
+                           "end": 293,
+                           "name": "increment"
+                        }
+                     }
+                  }
+               ],
+               "children": [
+                  {
+                     "type": "Text",
+                     "value": "Increment"
+                  }
+               ]
             }
          ]
       }
