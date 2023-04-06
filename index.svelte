@@ -1,5 +1,5 @@
 <script>
-  let count = 0;
+  let count = 10;
   const increment = () => ++count;
   const decrement = () => --count;
   let double = count*2
