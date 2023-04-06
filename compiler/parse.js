@@ -29,7 +29,6 @@ function parse(content) {
     skipWhiteSpaces();
     fragment.context = parseJavaScript()
     if(fragment.context.type === "SequenceExpression") {
-      console.log(fragment.context.expressions[1])
       fragment.index = fragment.context.expressions[1].name
       fragment.context = fragment.context.expressions[0]
     }

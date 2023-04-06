@@ -8,13 +8,17 @@ function generate(ast) {
     client: [],
   };
   const changeVariableName = new Set();
-  const reactiveStatements = new Set();
+  const reactiveStatement = new Set();
   const clientSideCode = clientScript(ast.script);
 
   function traverse(node, currentRef) {
     if (!node) return;
     if (Array.isArray(node)) {
-      return node.map((html, index) => traverse(html, currentRef)).join("");
+      return node
+        .map((html, index) =>
+          traverse(html, `${currentRef}.children[${index}]`)
+        )
+        .join("");
     }
     switch (node.type) {
       case "EachBlock": {
@@ -28,10 +32,11 @@ function generate(ast) {
 
         const children = node.children
           .map((children, id) => {
-            return traverse(
-              children,
-              `${currentRef}.children[${index}*${node.children.length}+${id}]`
-            );
+            const ref =
+              currentRef.slice(0, -1) +
+              `+ ${index}*${node.children.length}+${id}` +
+              currentRef.slice(-1);
+            return traverse(children, ref);
           })
           .join("");
 
@@ -59,9 +64,9 @@ function generate(ast) {
         let attribute = "";
         if (node.name.startsWith("on:")) {
           code.client.push(
-            `${currentRef}.$$${node.name.slice(3)}=${
-              node.value.expression.name
-            };`
+            `${currentRef}.$$${node.name.slice(3)}=${clientScript(
+              node.value.expression
+            )};`
           );
           event.add(`"${node.name.slice(3)}"`);
         } else if (node.value.type === "Expression") {
@@ -97,8 +102,46 @@ function generate(ast) {
     };
     walk(s, {
       leave(node, parent, prop, index) {
-        if (parent?.type === "VariableDeclarator" && prop === "init") {
-          if (node?.type === "Literal") {
+        if (
+          node.type === "LabeledStatement" &&
+          node.body.type === "BlockStatement"
+        ) {
+          this.replace({
+            type: "CallExpression",
+            callee: {
+              type: "Identifier",
+              name: "window._runtime$.subscribe",
+            },
+            arguments: [
+              {
+                type: "ArrowFunctionExpression",
+                params: [],
+                body: node.body,
+              },
+            ],
+          });
+        } else if (
+          parent?.type === "LabeledStatement" &&
+          parent?.label?.name === "$" &&
+          prop === "body"
+        ) {
+          if (
+            node?.type === "ExpressionStatement" &&
+            node?.expression?.type === "AssignmentExpression"
+          ) {
+            reactiveStatement.add(node.expression.left.name);
+            node.expression.right = {
+              type: "ArrowFunctionExpression",
+              params: [],
+              body: node.expression.right,
+            };
+          }
+        } else if (parent?.type === "VariableDeclarator" && prop === "init") {
+          if (
+            node?.type === "Literal" ||
+            node?.type === "ArrayExpression" ||
+            node?.type === "ObjectExpression"
+          ) {
             changeVariableName.add(parent.id?.name);
             this.replace({
               type: "CallExpression",
@@ -106,42 +149,25 @@ function generate(ast) {
                 type: "Identifier",
                 name: "window._runtime$.$$",
               },
-              arguments: [
-                {
-                  type: "Literal",
-                  value: node.value,
-                  raw: node.raw,
-                },
-              ],
-            });
-          } else if (
-            node?.type === "ArrayExpression" ||
-            node?.type === "ObjectExpression"
-          ) {
-            this.replace({
-              type: "CallExpression",
-              callee: {
-                type: "Identifier",
-                name: "window._runtime$.$",
-              },
               arguments: [node],
             });
-          } else if (node?.type !== "ArrowFunctionExpression") {
-            reactiveStatements.add(parent?.id?.name);
-            this.replace({
-              type: "ArrowFunctionExpression",
-              expression: true,
-              id: null,
-              generator: false,
-              async: false,
-              params: [],
-              body: node,
-            });
           }
+          // if (
+
+          // ) {
+          //   this.replace({
+          //     type: "CallExpression",
+          //     callee: {
+          //       type: "Identifier",
+          //       name: "window._runtime$.$",
+          //     },
+          //     arguments: [node],
+          //   });
+          // }
         } else if (
           node?.type === "Identifier" &&
           (changeVariableName.has(node.name) ||
-          reactiveStatements.has(node.name))
+            reactiveStatement.has(node.name))
         ) {
           if (parent?.type === "Property" && prop === "key") return;
           if (parent?.type === "Property" && prop === "value")
@@ -155,11 +181,11 @@ function generate(ast) {
                 name: "val",
               },
             });
-          else {
+          if (reactiveStatement.has(node.name)) {
             this.replace({
               type: "CallExpression",
-              arguments: [],
               callee: node,
+              arguments: [],
             });
           }
         }
